@@ -354,7 +354,7 @@ const SessionOverview: React.FC<{
 
                     {questionsWellUnderstood > 0 && (
                         <div className="mb-4">
-                            <h5 className="font-semibold text-green-400 mb-2">✅ What's Working Well:</h5>
+                            <h5 className="font-semibold text-green-400 mb-2">✅ What&apos;s Working Well:</h5>
                             <p className="text-sm text-slate-300 bg-green-500/10 p-3 rounded border border-green-500/30">
                                 Students demonstrated good understanding in {questionsWellUnderstood} out of {totalQuestions} questions.
                                 {allPositiveFeedback.length > 0 && " Key strengths include clear grasp of fundamental concepts and ability to apply knowledge appropriately."}
