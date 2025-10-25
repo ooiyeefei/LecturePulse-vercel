@@ -114,7 +114,7 @@ const StudentQuiz: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header showLogout />
+        <Header />
         <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -128,7 +128,7 @@ const StudentQuiz: React.FC = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-background">
-        <Header showLogout />
+        <Header />
         <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
           <Card className="max-w-md w-full">
             <CardContent className="text-center pt-6">
@@ -148,7 +148,7 @@ const StudentQuiz: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header showLogout />
+      <Header />
 
       <div className="container mx-auto p-6">
         <div className="max-w-2xl mx-auto">

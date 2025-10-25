@@ -1,61 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useUser } from '@stackframe/stack';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { TeacherIcon, StudentIcon } from '@/components/icons/Icons';
+import AuthPage from '@/components/AuthPage';
 
 export default function Home() {
+  const user = useUser();
   const router = useRouter();
 
-  const handleLogin = (role: 'teacher' | 'student') => {
-    if (role === 'teacher') {
-      router.push('/teacher');
-    } else {
-      router.push('/student');
+  useEffect(() => {
+    if (user) {
+      // User is authenticated, check if they have a role
+      const role = user.clientMetadata?.role as string;
+
+      if (role === 'teacher') {
+        router.push('/teacher');
+      } else if (role === 'student') {
+        router.push('/student');
+      } else {
+        // User is authenticated but hasn't selected a role yet
+        router.push('/select-role');
+      }
     }
-  };
+    // If user is null (not authenticated), we'll show the AuthPage below
+  }, [user, router]);
 
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center space-x-3 mb-6">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg"></div>
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-              LecturePulse
-            </h1>
-          </div>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Stop guessing if your students are lost. Get real-time feedback on what they understand.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-          <Card className="border-border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                onClick={() => handleLogin('teacher')}>
-            <CardContent className="p-8 text-center">
-              <div className="mb-4 flex justify-center">
-                <TeacherIcon className="w-12 h-12 text-blue-500" />
-              </div>
-              <h2 className="text-xl font-semibold mb-2 text-card-foreground">Login as a Teacher</h2>
-              <p className="text-muted-foreground text-sm">Create pulse checks and view student responses</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                onClick={() => handleLogin('student')}>
-            <CardContent className="p-8 text-center">
-              <div className="mb-4 flex justify-center">
-                <StudentIcon className="w-12 h-12 text-green-500" />
-              </div>
-              <h2 className="text-xl font-semibold mb-2 text-card-foreground">Login as a Student</h2>
-              <p className="text-muted-foreground text-sm">Join a lecture and answer questions</p>
-            </CardContent>
-          </Card>
-        </div>
+  // Show loading state while checking authentication
+  if (user === undefined) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
+    );
+  }
+
+  // If user is not authenticated, show the auth page
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AuthPage />
+      </div>
+    );
+  }
+
+  // If we reach here, the user is authenticated but redirecting, show loading
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
     </div>
   );
 }

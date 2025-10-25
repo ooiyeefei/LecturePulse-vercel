@@ -12,7 +12,7 @@ const StudentDone: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header showLogout />
+      <Header />
 
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
         <Card className="w-full max-w-md">
