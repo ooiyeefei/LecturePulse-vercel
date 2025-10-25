@@ -1,24 +1,9 @@
 'use client';
 
-import { useRouter, usePathname } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { useUser, UserButton } from '@stackframe/stack';
 
-interface HeaderProps {
-  showLogout?: boolean;
-  onLogout?: () => void;
-}
-
-export default function Header({ showLogout = false, onLogout }: HeaderProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const handleLogout = () => {
-    if (onLogout) {
-      onLogout();
-    } else {
-      router.push('/');
-    }
-  };
+export default function Header() {
+  const user = useUser();
 
   return (
     <header className="border-b border-border bg-card">
@@ -28,10 +13,13 @@ export default function Header({ showLogout = false, onLogout }: HeaderProps) {
           <h1 className="text-xl font-semibold text-foreground">LecturePulse</h1>
         </div>
 
-        {showLogout && (
-          <Button variant="ghost" onClick={handleLogout}>
-            Logout
-          </Button>
+        {user && (
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-muted-foreground">
+              Welcome, {user.displayName || user.primaryEmail}
+            </span>
+            <UserButton />
+          </div>
         )}
       </div>
     </header>

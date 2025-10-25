@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@stackframe/stack';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,48 @@ const StudentJoin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const user = useUser();
+
+  useEffect(() => {
+    if (user === undefined) {
+      // Still loading authentication state
+      return;
+    }
+
+    if (!user) {
+      // User is not authenticated, redirect to home
+      router.push('/');
+      return;
+    }
+
+    const role = user.clientMetadata?.role as string;
+    if (role !== 'student') {
+      // User is not a student, redirect based on their role or to role selection
+      if (role === 'teacher') {
+        router.push('/teacher');
+      } else {
+        router.push('/select-role');
+      }
+    }
+  }, [user, router]);
+
+  // Show loading state while checking authentication
+  if (user === undefined) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // If user is not authenticated or not a student, show loading while redirecting
+  if (!user || user.clientMetadata?.role !== 'student') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const handleJoin = async () => {
     if (!roomCode.trim()) return;
@@ -42,7 +85,7 @@ const StudentJoin: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header showLogout />
+      <Header />
 
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
         <Card className="w-full max-w-md">

@@ -1,22 +1,54 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useUser } from '@stackframe/stack';
 import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { TeacherIcon, StudentIcon } from '@/components/icons/Icons';
 
 export default function Home() {
+  const user = useUser();
   const router = useRouter();
 
-  const handleLogin = (role: 'teacher' | 'student') => {
-    if (role === 'teacher') {
-      router.push('/teacher');
-    } else {
-      router.push('/student');
-    }
-  };
+  useEffect(() => {
+    if (user) {
+      // User is authenticated, check if they have a role
+      const role = user.clientMetadata?.role as string;
 
+      if (role === 'teacher') {
+        router.push('/teacher');
+      } else if (role === 'student') {
+        router.push('/student');
+      } else {
+        // User is authenticated but hasn't selected a role yet
+        router.push('/select-role');
+      }
+    }
+  }, [user, router]);
+
+  // Show loading state while checking authentication with timeout
+  if (user === undefined) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is authenticated but redirecting, show loading
+  if (user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Show role selection for unauthenticated users
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
@@ -34,7 +66,7 @@ export default function Home() {
 
         <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
           <Card className="border-border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                onClick={() => handleLogin('teacher')}>
+                onClick={() => router.push('/auth/teacher')}>
             <CardContent className="p-8 text-center">
               <div className="mb-4 flex justify-center">
                 <TeacherIcon className="w-12 h-12 text-blue-500" />
@@ -45,7 +77,7 @@ export default function Home() {
           </Card>
 
           <Card className="border-border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                onClick={() => handleLogin('student')}>
+                onClick={() => router.push('/auth/student')}>
             <CardContent className="p-8 text-center">
               <div className="mb-4 flex justify-center">
                 <StudentIcon className="w-12 h-12 text-green-500" />
