@@ -48,10 +48,19 @@ export interface Results {
 }
 
 // S2 Stream Record Types
+export interface SessionMetadata {
+  user_id: string;
+  user_name: string;
+  room_code: string;
+  created_at: string;
+  status: 'active' | 'completed';
+}
+
 export interface QuizDataRecord {
   type: 'quiz_data';
   lecture_text: string;
   quiz: PulseQuestion[];
+  session_metadata?: SessionMetadata;
 }
 
 export interface StudentResponseRecord {

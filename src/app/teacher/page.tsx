@@ -3,12 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@stackframe/stack';
+import useSWR from 'swr';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SparklesIcon } from '@/components/icons/Icons';
 import Header from '@/components/header';
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 // Add Microphone icon
 const MicrophoneIcon = ({ className }: { className?: string }) => (
@@ -21,8 +24,22 @@ const TeacherDashboard: React.FC = () => {
   const [lectureText, setLectureText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('create');
   const router = useRouter();
   const user = useUser();
+
+  // Fetch live sessions (active)
+  const { data: liveSessions, error: liveError } = useSWR(
+    user ? '/api/get-user-sessions?status=active' : null,
+    fetcher,
+    { refreshInterval: 5000 } // Poll every 5 seconds for live sessions
+  );
+
+  // Fetch past sessions (completed)
+  const { data: pastSessions, error: pastError } = useSWR(
+    user ? '/api/get-user-sessions?status=completed' : null,
+    fetcher
+  );
 
   useEffect(() => {
     if (user === undefined) {
@@ -98,11 +115,11 @@ const TeacherDashboard: React.FC = () => {
       <Header />
 
       <div className="container mx-auto p-6">
-        <Tabs defaultValue="create" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="create">Create New Pulse</TabsTrigger>
-            <TabsTrigger value="live" disabled>Live Session</TabsTrigger>
-            <TabsTrigger value="past" disabled>Past Sessions</TabsTrigger>
+            <TabsTrigger value="live">Live Sessions</TabsTrigger>
+            <TabsTrigger value="past">Past Sessions</TabsTrigger>
           </TabsList>
 
           <TabsContent value="create" className="mt-6">
@@ -164,6 +181,129 @@ const TeacherDashboard: React.FC = () => {
                   )}
                   {loading ? 'Generating...' : 'Generate Pulse Check'}
                 </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="live" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Live Sessions</CardTitle>
+                <CardDescription>
+                  Sessions currently running where students can join and respond
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {liveError ? (
+                  <div className="p-4 bg-destructive/15 border border-destructive/20 rounded-md">
+                    <p className="text-destructive text-sm">Failed to load live sessions</p>
+                  </div>
+                ) : !liveSessions ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : liveSessions.sessions?.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No active sessions</p>
+                    <p className="text-sm text-muted-foreground">Create a new pulse check to get started</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {liveSessions.sessions?.map((session: any, index: number) => (
+                      <Card key={index} className="cursor-pointer hover:bg-accent/50 transition-colors">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                  <span className="font-semibold">Room {session.room_code}</span>
+                                </div>
+                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                  LIVE
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-1">
+                                {session.quiz_count} question{session.quiz_count !== 1 ? 's' : ''}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Created: {new Date(session.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                            <Button
+                              onClick={() => router.push(`/teacher/${session.room_code}`)}
+                              size="sm"
+                            >
+                              View Results
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="past" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Past Sessions</CardTitle>
+                <CardDescription>
+                  Previously completed sessions and their results
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {pastError ? (
+                  <div className="p-4 bg-destructive/15 border border-destructive/20 rounded-md">
+                    <p className="text-destructive text-sm">Failed to load past sessions</p>
+                  </div>
+                ) : !pastSessions ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : pastSessions.sessions?.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No completed sessions</p>
+                    <p className="text-sm text-muted-foreground">Your completed sessions will appear here</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pastSessions.sessions?.map((session: any, index: number) => (
+                      <Card key={index} className="cursor-pointer hover:bg-accent/50 transition-colors">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                                  <span className="font-semibold">Room {session.room_code}</span>
+                                </div>
+                                <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
+                                  COMPLETED
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-1">
+                                {session.quiz_count} question{session.quiz_count !== 1 ? 's' : ''}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Created: {new Date(session.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                            <Button
+                              onClick={() => router.push(`/teacher/${session.room_code}`)}
+                              variant="outline"
+                              size="sm"
+                            >
+                              View Results
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
